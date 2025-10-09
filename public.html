@@ -1,0 +1,773 @@
+<!DOCTYPE html>
+<html lang="es" class="h-full bg-slate-50">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GINMUS</title>
+
+    <!-- Dependencias Externas (CDNs) -->
+    <script src="https://cdn.tailwindcss.com"></script> <!-- Framework de CSS Tailwind -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet"> <!-- Fuente 'Inter' de Google Fonts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script> <!-- Librería para manejar archivos Excel (.xlsx) -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script> <!-- Librería para generar PDFs -->
+
+    <!-- Estilos Personalizados y Overrides de Tailwind -->
+    <style>
+        /* Estilo base del cuerpo del documento */
+        body {
+            font-family: 'Inter', sans-serif;
+            -webkit-font-smoothing: antialiased;
+            -moz-osx-font-smoothing: grayscale;
+        }
+
+        /* --- Estilos del Sidebar --- */
+        /* Estilo para el enlace activo en la barra lateral */
+        .sidebar-link.active {
+            background-color: #f1f5f9; /* slate-100 */
+            color: #1e293b;      /* slate-800 */
+            font-weight: 600;
+        }
+        .sidebar-link.active svg {
+            color: #4f46e5; /* indigo-600 */
+        }
+
+        /* --- Estilos del Módulo Chatbot --- */
+        /* Estilo base para las burbujas de mensaje */
+        #module-chatbot .message-bubble {
+            padding: 0.625rem 1rem;
+            border-radius: 0.75rem;
+            margin-bottom: 0.5rem;
+            max-width: 85%;
+            width: fit-content; /* Se adapta a la longitud del mensaje */
+            word-wrap: break-word;
+            line-height: 1.5;
+        }
+        /* Estilo para los mensajes del usuario (derecha) */
+        #module-chatbot .user-message {
+            background-color: #4f46e5; /* indigo-600 */
+            color: white;
+            align-self: flex-end;
+            margin-left: auto; /* Empuja a la derecha */
+            border-bottom-right-radius: 0.25rem;
+        }
+        /* Estilo para los mensajes del bot (izquierda) */
+        #module-chatbot .bot-message {
+            background-color: #e2e8f0; /* slate-200 */
+            color: #1e293b; /* slate-800 */
+            align-self: flex-start;
+            margin-right: auto; /* Empuja a la izquierda */
+            border-bottom-left-radius: 0.25rem;
+        }
+
+        /* --- Estilos del Módulo Informe de Entorno --- */
+        /* Estilo para el contenedor del resultado del informe (texto monoespaciado) */
+        #module-report .report-output-content {
+            white-space: pre-wrap;
+            font-family: monospace;
+            background-color: #f8fafc; /* slate-50 */
+            padding: 1rem;
+            border-radius: 0.5rem;
+            border: 1px solid #e2e8f0; /* slate-200 */
+            max-height: 500px;
+            overflow-y: auto;
+            color: #334155; /* slate-700 */
+            font-size: 0.875rem;
+        }
+        /* Spinner de carga para el informe */
+        #module-report .report-loading-spinner {
+            border: 4px solid rgba(0, 0, 0, .1);
+            border-left-color: #4f46e5; /* indigo-600 */
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+        /* Animación de rotación para el spinner */
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body class="h-full text-slate-800">
+
+    <!-- Contenedor principal de la aplicación con layout flex -->
+    <div id="main-content" class="flex h-screen bg-slate-50">
+        
+        <!-- ===== Barra Lateral (Sidebar) ===== -->
+        <aside class="w-64 bg-white border-r border-slate-200 flex flex-col flex-shrink-0">
+            <!-- Cabecera del Sidebar con logo y eslogan -->
+            <div class="flex items-center gap-3 h-16 px-4 border-b border-slate-200">
+                <img src="logoGinmus.png" alt="Logo de Ginmus.com" class="h-10 w-auto">
+                <div>
+                  <p class="font-bold text-slate-900 text-lg">GINMUS</p>
+                  <p class="text-xs text-slate-500 -mt-1">+ clientes - tiempo</p>
+                </div>
+            </div>
+
+            <!-- Navegación principal del Sidebar -->
+            <nav class="flex-1 space-y-1.5 p-4 overflow-y-auto">
+                <a href="#" class="sidebar-link flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-900" data-module="dashboard">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path d="M5 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2H5zM5 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2H5zM11 3a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2V5a2 2 0 00-2-2h-2zM11 11a2 2 0 00-2 2v2a2 2 0 002 2h2a2 2 0 002-2v-2a2 2 0 00-2-2h-2z" /></svg>
+                    <span>Panel Principal</span>
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-900" data-module="strategic-analysis">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M11.3 1.046A1 1 0 0112 2v5h4a1 1 0 01.82 1.573l-7 10A1 1 0 018 18v-5H4a1 1 0 01-.82-1.573l7-10a1 1 0 011.12-.38z" clip-rule="evenodd" /></svg>
+                    <span>Análisis Estratégico</span>
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-900" data-module="social">
+                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path d="M10 12a2 2 0 100-4 2 2 0 000 4z" /><path fill-rule="evenodd" d="M.458 10C1.732 5.943 5.522 3 10 3s8.268 2.943 9.542 7c-1.274 4.057-5.022 7-9.542 7S1.732 14.057.458 10zM14 10a4 4 0 11-8 0 4 4 0 018 0z" clip-rule="evenodd" /></svg>
+                    <span>Creación para RRSS</span>
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-900" data-module="client-search">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M8 4a4 4 0 100 8 4 4 0 000-8zM2 8a6 6 0 1110.89 3.476l4.817 4.817a1 1 0 01-1.414 1.414l-4.816-4.816A6 6 0 012 8z" clip-rule="evenodd" /></svg>
+                    <span>Búsqueda de Clientes</span>
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-900" data-module="report">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M5.05 4.05a7 7 0 119.9 9.9L10 18.9l-4.95-4.95a7 7 0 010-9.9zM10 11a2 2 0 100-4 2 2 0 000 4z" clip-rule="evenodd" /></svg>
+                    <span>Informe de Entorno</span>
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-900" data-module="valuation">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path d="M2 10a8 8 0 018-8v8h8a8 8 0 11-16 0z" /><path d="M12 2.252A8.014 8.014 0 0117.748 8H12V2.252z" /></svg>
+                    <span>Valoración Predictiva</span>
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-900" data-module="chatbot">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path fill-rule="evenodd" d="M18 10c0 3.866-3.582 7-8 7a8.841 8.841 0 01-4.083-.98L2 17l1.03-3.268A8.965 8.965 0 012 10c0-3.866 3.582-7 8-7s8 3.134 8 7zM4.72 14.48A7 7 0 0010 16c3.31 0 6-2.69 6-6s-2.69-6-6-6a6.97 6.97 0 00-4.217 1.402l-.01.01-.002.002-.002.002A6.979 6.979 0 003 10c0 .442.04.877.117 1.295l.01.035.01.035.012.04z" clip-rule="evenodd" /></svg>
+                    <span>Chatbot IA</span>
+                </a>
+                <a href="#" class="sidebar-link flex items-center gap-3 rounded-md px-3 py-2.5 text-sm font-medium text-slate-600 transition-colors duration-150 hover:bg-slate-100 hover:text-slate-900" data-module="contact">
+                   <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0 text-slate-400" viewBox="0 0 20 20" fill="currentColor"><path d="M2.003 5.884L10 9.882l7.997-3.998A2 2 0 0016 4H4a2 2 0 00-1.997 1.884z" /><path d="M18 8.118l-8 4-8-4V14a2 2 0 002 2h12a2 2 0 002-2V8.118z" /></svg>
+                    <span>Contactar</span>
+                </a>
+            </nav>
+
+            <!-- Pie de página del Sidebar con copyright -->
+            <div class="p-4 mt-auto border-t border-slate-200">
+                <!-- Links de footer comentados para una posible futura implementación
+                <nav class="flex flex-wrap justify-center gap-x-4 gap-y-1 mb-3">
+                     <a href="#" class="text-xs text-slate-500 hover:text-indigo-600 hover:underline transition" data-module="privacy">Privacidad</a>
+                    <a href="#" class="text-xs text-slate-500 hover:text-indigo-600 hover:underline transition" data-module="about">Nosotros</a>
+                    <a href="#" class="text-xs text-slate-500 hover:text-indigo-600 hover:underline transition" data-module="legal">Legal</a>
+                    <a href="#" class="text-xs text-slate-500 hover:text-indigo-600 hover:underline transition" data-module="cookies">Cookies</a>
+                </nav> -->
+                <p class="text-xs text-center text-slate-400">© 2025 Guillermo Mulas</p>
+            </div>
+        </aside>
+
+        <!-- ===== Área de Contenido Principal ===== -->
+        <main class="flex-1 p-8 overflow-y-auto">
+            
+            <!-- ===== Módulo: Panel Principal (Dashboard) ===== -->
+            <div id="module-dashboard" class="module-content" style="display: none;">
+                <h2 class="text-3xl font-bold tracking-tight text-slate-900">Panel Principal</h2>
+                <p class="text-slate-600 mt-1 text-base">Bienvenido a GINMUS. Accede rápidamente a las herramientas de IA más potentes para tu negocio inmobiliario.</p>
+
+                <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
+                    <!-- Card de acceso rápido: Análisis Estratégico -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-lg flex flex-col">
+                        <div class="flex items-start gap-4">
+                            <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 text-indigo-600">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M12.385 2.21a.991.991 0 0 0-1.036.23l-7.333 9.429A.993.993 0 0 0 4.75 13.5h3.679a.995.995 0 0 1 .933 1.342l-2.667 6.4a.993.993 0 0 0 1.667 1.028l7.333-9.429A.993.993 0 0 0 18.25 10.5h-3.679a.995.995 0 0 1-.933-1.342l2.667-6.4a.993.993 0 0 0-.92-.124L12.385 2.21Z" /></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-slate-900">Análisis Estratégico con IA</h3>
+                                <p class="text-sm text-slate-500">Tu nueva herramienta estrella</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-600 mt-4 text-sm leading-relaxed flex-1">
+                            Realiza un análisis F.O.D.A., encuentra comparables, define el perfil del comprador y genera textos de marketing hiper-personalizados.
+                        </p>
+                        <button data-target-module="strategic-analysis" class="dashboard-cta-button mt-6 w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                            Iniciar Análisis
+                        </button>
+                    </div>
+
+                    <!-- Card de acceso rápido: Búsqueda de Clientes -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-lg flex flex-col">
+                         <div class="flex items-start gap-4">
+                            <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 text-indigo-600">
+                               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M10.5 3.75a6.75 6.75 0 1 0 0 13.5 6.75 6.75 0 0 0 0-13.5ZM2.25 10.5a8.25 8.25 0 1 1 14.59 5.28l4.69 4.69a.75.75 0 1 1-1.06 1.06l-4.69-4.69A8.25 8.25 0 0 1 2.25 10.5Z" clip-rule="evenodd" /></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-slate-900">Búsqueda de Clientes</h3>
+                                <p class="text-sm text-slate-500">Explora el mercado de particulares</p>
+                            </div>
+                        </div>
+                        <div class="bg-slate-50 border border-slate-200 p-3 rounded-lg text-sm mt-4 space-y-1.5 flex-1">
+                            <p class="flex justify-between"><strong>Anuncios en BBDD:</strong> <span id="db-total-ads" class="font-semibold text-slate-700">--</span></p>
+                            <p class="flex justify-between"><strong>Última Actualización:</strong> <span id="db-last-update" class="font-semibold text-slate-700">--</span></p>
+                        </div>
+                        <button data-target-module="client-search" class="dashboard-cta-button mt-6 w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                            Ir a Búsqueda
+                        </button>
+                    </div>
+
+                    <!-- Card de acceso rápido: Creación de Contenido -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-lg flex flex-col">
+                         <div class="flex items-start gap-4">
+                            <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 text-indigo-600">
+                               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path d="M16.293 2.293a1 1 0 0 1 1.414 0l4 4a1 1 0 0 1 0 1.414l-13 13A1 1 0 0 1 8 21H4a1 1 0 0 1-1-1v-4a1 1 0 0 1 .293-.707l13-13ZM15 6.414l-9 9V19h3.586l9-9L15 6.414Z" /><path d="M18 4.414l-2-2L17.586 1 20 3.414 18 5.414Z" /></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-slate-900">Generador de Contenido</h3>
+                                <p class="text-sm text-slate-500">Para Redes y Portales</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-600 mt-4 text-sm leading-relaxed flex-1">
+                            Crea textos de venta persuasivos y adaptados para Facebook, Instagram y portales inmobiliarios a partir de los datos del inmueble.
+                        </p>
+                        <button data-target-module="social" class="dashboard-cta-button mt-6 w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                            Crear Contenido
+                        </button>
+                    </div>
+
+                    <!-- Card de acceso rápido: Asistente IA -->
+                    <div class="bg-white p-6 rounded-xl border border-slate-200 shadow-sm transition-shadow hover:shadow-lg flex flex-col">
+                         <div class="flex items-start gap-4">
+                            <div class="flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-lg bg-slate-100 text-indigo-600">
+                               <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" viewBox="0 0 24 24" fill="currentColor"><path fill-rule="evenodd" d="M4.804 21.642a.75.75 0 0 1-.663-1.085l1.623-4.87a9.75 9.75 0 0 1-1.74-5.437C4.024 4.903 8.443 1.5 13.5 1.5s9.476 3.403 9.476 8.25-4.476 8.25-9.476 8.25a13.332 13.332 0 0 1-4.796-1.02l-3.9 4.662ZM13.5 3A8.003 8.003 0 0 0 5.524 9.75c0 1.83.626 3.535 1.69 4.89l.086.11-.05.15-1.353 4.058a.25.25 0 0 0 .221.362l4.135-.919.14-.03.118.07a11.83 11.83 0 0 0 2.98.49c4.49 0 8.024-3.23 8.024-6.75S17.99 3 13.5 3Z" clip-rule="evenodd" /></svg>
+                            </div>
+                            <div>
+                                <h3 class="text-lg font-semibold text-slate-900">Asistente IA</h3>
+                                <p class="text-sm text-slate-500">Tu experto 24/7</p>
+                            </div>
+                        </div>
+                        <p class="text-slate-600 mt-4 text-sm leading-relaxed flex-1">
+                            Consulta a nuestro chatbot experto en el sector inmobiliario español o hazle preguntas sobre los anuncios de la base de datos.
+                        </p>
+                        <button data-target-module="chatbot" class="dashboard-cta-button mt-6 w-full justify-center rounded-md bg-indigo-600 px-3 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                            Hablar con el Chatbot
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Módulo: Creación de Contenido para RRSS ===== -->
+            <div id="module-social" class="module-content" style="display: none;">
+                <h2 class="text-3xl font-bold tracking-tight text-slate-900">Creación de Contenido para Redes Sociales</h2>
+                <p class="text-slate-600 mt-1 text-base">Introduce los datos clave de la propiedad y nuestro asistente de IA generará textos optimizados.</p>
+                <div class="mt-8 bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-slate-200">
+                    <form id="social-media-form" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label for="sm-property-type" class="block text-sm font-medium leading-6 text-slate-900">Tipo de Inmueble</label>
+                                <input type="text" id="sm-property-type" placeholder=" Ej: Piso, Chalet, Ático" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                            </div>
+                            <div>
+                                <label for="sm-location" class="block text-sm font-medium leading-6 text-slate-900">Ubicación</label>
+                                <input type="text" id="sm-location" placeholder=" Ej: Barrio de la Viña, Cádiz" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                            </div>
+                             <div>
+                                <label for="sm-area" class="block text-sm font-medium leading-6 text-slate-900">Superficie (m²)</label>
+                                <input type="number" id="sm-area" placeholder=" Ej: 90" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                            </div>
+                        </div>
+                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label for="sm-rooms" class="block text-sm font-medium leading-6 text-slate-900">Nº Habitaciones</label>
+                                <input type="number" id="sm-rooms" placeholder=" Ej: 3" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                            </div>
+                            <div>
+                                <label for="sm-baths" class="block text-sm font-medium leading-6 text-slate-900">Nº Baños</label>
+                                <input type="number" id="sm-baths" placeholder=" Ej: 2" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                            </div>
+                            <div>
+                               <label for="sm-state" class="block text-sm font-medium leading-6 text-slate-900">Estado</label>
+                               <input type="text" id="sm-state" placeholder=" Ej: Reformado, Buen estado" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                           </div>
+                        </div>
+                        <div>
+                            <label for="sm-extra-features" class="block text-sm font-medium leading-6 text-slate-900">Características Adicionales (puntos fuertes)</label>
+                            <textarea id="sm-extra-features" rows="3" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder=" Ej: Terraza con vistas al mar, garaje incluido, piscina comunitaria, muy luminoso..."></textarea>
+                        </div>
+                        
+                        <div>
+                            <label class="block text-sm font-medium text-slate-900">Selecciona las plataformas de destino</label>
+                            <div class="mt-2 space-y-3">
+                                <div class="relative flex items-start">
+                                    <div class="flex h-6 items-center"><input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600" name="platform" value="facebook"></div>
+                                    <div class="ml-3 text-sm leading-6"><span class="text-slate-700">Facebook</span></div>
+                                </div>
+                                <div class="relative flex items-start">
+                                    <div class="flex h-6 items-center"><input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600" name="platform" value="instagram"></div>
+                                    <div class="ml-3 text-sm leading-6"><span class="text-slate-700">Instagram</span></div>
+                                </div>
+                                <div class="relative flex items-start">
+                                    <div class="flex h-6 items-center"><input type="checkbox" class="h-4 w-4 rounded border-slate-300 text-indigo-600 focus:ring-indigo-600" name="platform" value="portales"></div>
+                                    <div class="ml-3 text-sm leading-6"><span class="text-slate-700">Portales Inmobiliarios (Idealista, Fotocasa, etc.)</span></div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <button type="submit" class="inline-flex justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                            Generar Textos
+                        </button>
+                    </form>
+
+                    <!-- Contenedor para mostrar los resultados generados por la IA -->
+                    <div id="social-media-results" class="mt-8 border-t border-slate-200 pt-6"></div>
+                </div>
+            </div>
+
+            <!-- ===== Módulo: Búsqueda de Clientes ===== -->
+            <div id="module-client-search" class="module-content" style="display: none;">
+                <h2 class="text-3xl font-bold tracking-tight text-slate-900">Búsqueda de Clientes</h2>
+                 <p class="text-slate-600 mt-1 text-base">Filtra y exporta anuncios de particulares para encontrar tu próxima captación.</p>
+                <div class="mt-8 bg-white rounded-xl shadow-sm border border-slate-200">
+                    <!-- El contenido de este módulo se carga dinámicamente desde client_search_module.js -->
+                    <div id="client-search-app-container" class="p-1">
+                        Cargando módulo de Búsqueda de Clientes...
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Módulo: Informe de Entorno ===== -->
+            <div id="module-report" class="module-content" style="display: none;">
+                <h2 class="text-3xl font-bold tracking-tight text-slate-900">Informe de Entorno</h2>
+                <p class="text-slate-600 mt-1 text-base">Genera un informe detallado sobre los servicios, transportes y puntos de interés de una zona.</p>
+                <div class="mt-8 bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-slate-200">
+                    <!-- El contenido de este módulo se carga dinámicamente desde environment_report_module.js -->
+                    <div id="environment-report-app-container">
+                        Cargando módulo de Informe de Entorno...
+                    </div>
+                </div>
+            </div>
+
+            <!-- ===== Módulo: Valoración Predictiva ===== -->
+            <div id="module-valuation" class="module-content" style="display: none;">
+                <h2 class="text-3xl font-bold tracking-tight text-slate-900">Valoración Predictiva de Inmuebles</h2>
+                <p class="text-slate-600 mt-1 text-base">Estima el valor de mercado potencial de una propiedad con nuestro modelo de Machine Learning.</p>
+                <div class="mt-8 bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-slate-200">
+                    <form id="valuation-form" class="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+                        <div>
+                            <label for="val-address" class="block text-sm font-medium leading-6 text-slate-900">Dirección / Zona Principal</label>
+                            <input type="text" id="val-address" name="val-address" placeholder=" Ej: Centro (Cádiz Capital)" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                            <p class="text-xs text-slate-500 mt-1.5">Introduce calle/barrio, y ciudad entre paréntesis si es relevante (ej. La Viña (Cádiz Capital)).</p>
+                        </div>
+                        <div>
+                            <label for="val-property-type" class="block text-sm font-medium leading-6 text-slate-900">Tipo de Propiedad</label>
+                            <select id="val-property-type" name="val-property-type" class="mt-1 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                                <option value="piso" selected>Piso</option><option value="unifamiliar">Casa (General, Chalet)</option><option value="atico">Ático</option><option value="adosada">Casa adosada</option><option value="pareada">Casa pareada</option><option value="apartamento">Apartamento</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label for="val-area" class="block text-sm font-medium leading-6 text-slate-900">Superficie construida (m²)</label>
+                            <input type="number" id="val-area" name="val-area" min="10" placeholder=" Ej: 80" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                        </div>
+                        <div>
+                            <label for="val-rooms" class="block text-sm font-medium leading-6 text-slate-900">Nº Habitaciones</label>
+                            <input type="number" id="val-rooms" name="val-rooms" min="0" placeholder=" Ej: 3" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                        </div>
+                        <div>
+                            <label for="val-baths" class="block text-sm font-medium leading-6 text-slate-900">Nº Baños</label>
+                            <input type="number" id="val-baths" name="val-baths" min="0" placeholder=" Ej: 2" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                        </div>
+                        <div>
+                            <label for="val-state" class="block text-sm font-medium leading-6 text-slate-900">Estado Conservación</label>
+                            <select id="val-state" name="val-state" class="mt-1 block w-full rounded-md border-0 py-1.5 pl-3 pr-10 text-slate-900 ring-1 ring-inset ring-slate-300 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6">
+                                <option value="bueno" selected>Buen estado</option><option value="reformar">A reformar</option><option value="reformado">Reformado</option><option value="nuevo">A estrenar / Obra nueva</option>
+                            </select>
+                        </div>
+                        <div class="md:col-span-2 mt-2">
+                            <button type="submit" aria-label="Calcular valoración estimada del inmueble" class="w-full md:w-auto inline-flex justify-center rounded-md bg-indigo-600 px-5 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                                Calcular Valoración Estimada
+                            </button>
+                        </div>
+                    </form>
+                    <!-- NOTA: El contenedor para los resultados de la valoración no está en el HTML original, pero la lógica JS lo busca. Lo añadimos para evitar errores. -->
+                    <div id="valuation-output" class="mt-6"></div>
+                    <div id="valuation-status" class="mt-2 text-sm text-slate-500"></div>
+                </div>
+            </div>
+
+            <!-- ===== Módulo: Chatbot IA ===== -->
+            <div id="module-chatbot" class="module-content" style="display: none;">
+                 <h2 class="text-3xl font-bold tracking-tight text-slate-900">Chatbot IA</h2>
+                 <div class="mt-4 bg-white rounded-xl shadow-sm border border-slate-200 flex flex-col h-[calc(100vh-10rem)]">
+                    <!-- El contenido de este módulo se carga dinámicamente desde chatbot_module.js -->
+                    <div id="chatbot-app-container" class="h-full">Cargando módulo de Chatbot...</div>
+                </div>
+            </div>
+
+            <!-- ===== Módulo: Contacto ===== -->
+            <div id="module-contact" class="module-content" style="display: none;">
+                <h2 class="text-3xl font-bold tracking-tight text-slate-900">Contactar</h2>
+                <p class="text-slate-600 mt-1 text-base">¿Tienes alguna pregunta o necesitas soporte? Estaremos encantados de ayudarte.</p>
+                 <div class="mt-8 bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-slate-200 max-w-2xl">
+                     <form id="contact-form" class="space-y-6">
+                         <div>
+                            <label for="contact-name" class="block text-sm font-medium leading-6 text-slate-900">Nombre</label>
+                            <input type="text" id="contact-name" name="contact-name" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                        </div>
+                         <div>
+                            <label for="contact-email" class="block text-sm font-medium leading-6 text-slate-900">Email</label>
+                            <input type="email" id="contact-email" name="contact-email" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                        </div>
+                         <div>
+                            <label for="contact-message" class="block text-sm font-medium leading-6 text-slate-900">Mensaje</label>
+                            <textarea id="contact-message" name="contact-message" rows="4" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required></textarea>
+                        </div>
+                         <button type="submit" aria-label="Enviar mensaje de contacto" class="inline-flex justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">Enviar Mensaje</button>
+                    </form>
+                    <!-- Mensajes de feedback para el usuario tras el envío -->
+                    <p id="contact-success" class="mt-4 text-green-600 text-sm" style="display:none;">¡Mensaje enviado con éxito!</p>
+                    <p id="contact-error" class="mt-4 text-red-600 text-sm" style="display:none;">Hubo un error al enviar tu mensaje. Por favor, inténtalo de nuevo más tarde.</p>
+                </div>
+            </div>
+
+            <!-- ===== Módulos de Texto (Legales, etc.) ===== -->
+            <!-- Estos módulos contienen contenido estático -->
+            <div id="module-privacy" class="module-content" style="display: none;">
+                <h2 class="text-3xl font-bold tracking-tight text-slate-900 mb-6">Política de Privacidad</h2>
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 prose prose-slate max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-a:text-indigo-600 hover:prose-a:text-indigo-700">
+                    <h4>1. Introducción</h4><p>En GINMUS, respetamos tu privacidad y estamos comprometidos a proteger tus datos personales...</p>
+                    <h4>2. Datos que Recopilamos</h4><p>Podemos recopilar, usar, almacenar y transferir diferentes tipos de datos personales sobre ti...</p>
+                    <em>Última actualización: 01 de Enero de 2025</em>
+                </div>
+            </div>
+            <div id="module-about" class="module-content" style="display: none;">
+                <h2 class="text-3xl font-bold tracking-tight text-slate-900 mb-6">Quiénes Somos</h2>
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 prose prose-slate max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-a:text-indigo-600 hover:prose-a:text-indigo-700">
+                    <h4>Nuestra Misión</h4><p>GINMUS tiene como misión revolucionar el sector inmobiliario a través de la tecnología, ofreciendo herramientas innovadoras...</p>
+                    <h4>Nuestro Equipo</h4><p>Somos un equipo de profesionales apasionados por la tecnología y el mercado inmobiliario...</p>
+                </div>
+            </div>
+            <div id="module-legal" class="module-content" style="display: none;">
+                <h2 class="text-3xl font-bold tracking-tight text-slate-900 mb-6">Aviso Legal</h2>
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 prose prose-slate max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-a:text-indigo-600 hover:prose-a:text-indigo-700">
+                    <h4>1. Titularidad del Sitio Web</h4><p>GINMUS Studio S.L., con CIF B-12345678, domicilio en Calle Ficticia 123, Cádiz, España...</p>
+                    <h4>2. Condiciones de Uso</h4><p>El acceso y/o uso de este portal de GINMUS atribuye la condición de USUARIO...</p>
+                </div>
+            </div>
+            <div id="module-cookies" class="module-content" style="display: none;">
+                <h2 class="text-3xl font-bold tracking-tight text-slate-900 mb-6">Política de Cookies</h2>
+                <div class="bg-white p-8 rounded-xl shadow-sm border border-slate-200 prose prose-slate max-w-none prose-headings:font-semibold prose-headings:text-slate-900 prose-a:text-indigo-600 hover:prose-a:text-indigo-700">
+                    <h4>1. ¿Qué son las cookies?</h4><p>Una cookie es un fichero que se descarga en tu ordenador al acceder a determinadas páginas web...</p>
+                    <h4>2. Tipos de Cookies Utilizadas</h4><p>Este sitio web utiliza cookies propias y de terceros para mejorar la experiencia del usuario...</p>
+                </div>
+            </div>
+
+            <!-- ===== Módulo: Análisis Estratégico ===== -->
+            <div id="module-strategic-analysis" class="module-content" style="display: none;">
+                <h2 class="text-3xl font-bold tracking-tight text-slate-900">Agente de Análisis Estratégico de Propiedades</h2>
+                <p class="text-slate-600 mt-1 text-base">Introduce los datos del inmueble para recibir un análisis completo de mercado, F.O.D.A., perfil del comprador y contenido de marketing.</p>
+                
+                <div class="mt-8 bg-white p-6 sm:p-8 rounded-xl shadow-sm border border-slate-200">
+                    <form id="strategic-analysis-form" class="space-y-6">
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label for="sa-property-type" class="block text-sm font-medium leading-6 text-slate-900">Tipo de Inmueble</label>
+                                <input type="text" id="sa-property-type" placeholder=" Ej: Piso, Chalet, Ático"class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                            </div>
+                            <div>
+                                <label for="sa-location" class="block text-sm font-medium leading-6 text-slate-900">Ubicación</label>
+                                <input type="text" id="sa-location" placeholder=" Ej: Barrio de la Viña, Cádiz" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                            </div>
+                             <div>
+                                <label for="sa-area" class="block text-sm font-medium leading-6 text-slate-900">Superficie (m²)</label>
+                                <input type="number" id="sa-area" placeholder=" Ej: 90" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                            </div>
+                        </div>
+                         <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                            <div>
+                                <label for="sa-rooms" class="block text-sm font-medium leading-6 text-slate-900">Nº Habitaciones</label>
+                                <input type="number" id="sa-rooms" placeholder=" Ej: 3"class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                            </div>
+                            <div>
+                                <label for="sa-baths" class="block text-sm font-medium leading-6 text-slate-900">Nº Baños</label>
+                                <input type="number" id="sa-baths" placeholder=" Ej: 2" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                            </div>
+                            <div>
+                               <label for="sa-state" class="block text-sm font-medium leading-6 text-slate-900">Estado</label>
+                               <input type="text" id="sa-state" placeholder=" Ej: Reformado, Buen estado" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" required>
+                           </div>
+                        </div>
+                        <div>
+                            <label for="sa-extra-features" class="block text-sm font-medium leading-6 text-slate-900">Características Adicionales (puntos fuertes)</label>
+                            <textarea id="sa-extra-features" rows="3" class="mt-1 block w-full rounded-md border-0 py-1.5 text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 placeholder:text-slate-400 focus:ring-2 focus:ring-inset focus:ring-indigo-600 sm:text-sm sm:leading-6" placeholder=" Ej: Terraza con vistas al mar, garaje incluido, piscina comunitaria, muy luminoso..."></textarea>
+                        </div>
+
+                        <button type="submit" class="inline-flex items-center gap-2 justify-center rounded-md bg-indigo-600 px-4 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-700 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600">
+                           <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor"><path d="M7 3a1 1 0 000 2h6a1 1 0 100-2H7zM4 7a1 1 0 011-1h10a1 1 0 110 2H5a1 1 0 01-1-1zM2 11a2 2 0 012-2h12a2 2 0 012 2v4a2 2 0 01-2-2H4a2 2 0 01-2-2v-4z" /></svg>
+                            Ejecutar Agente de IA
+                        </button>
+                    </form>
+
+                    <!-- Contenedor para los resultados del análisis -->
+                    <div id="strategic-analysis-results" class="mt-8 border-t border-slate-200 pt-6 space-y-8"></div>
+                </div>
+            </div>
+
+        </main>
+    </div>
+
+    <!-- ===== Script Principal de la Aplicación ===== -->
+    <script type="module">
+        // Objeto para llevar un registro de los scripts de módulos que ya han sido cargados,
+        // para evitar cargarlos múltiples veces.
+        const loadedModuleScripts = {};
+
+        /**
+         * Carga dinámicamente el script de un módulo si no ha sido cargado previamente.
+         * @param {string} scriptSrc - La ruta al archivo JS del módulo.
+         * @param {string} scriptId - Un ID único para el script.
+         * @returns {Promise<void>} Una promesa que se resuelve cuando el script se ha cargado.
+         */
+        function loadModuleScript(scriptSrc, scriptId) {
+            if (loadedModuleScripts[scriptId]) {
+                return Promise.resolve(); // Si ya está cargado, no hacer nada.
+            }
+            return new Promise((resolve, reject) => {
+                const script = document.createElement('script');
+                script.src = scriptSrc;
+                script.id = scriptId;
+                script.type = 'module';
+                script.onload = () => {
+                    loadedModuleScripts[scriptId] = true; // Marcar como cargado
+                    resolve();
+                };
+                script.onerror = () => {
+                    reject(new Error(`Fallo al cargar el script ${scriptSrc}.`));
+                };
+                document.body.appendChild(script);
+            });
+        }
+
+        /**
+         * Activa un módulo específico: muestra su contenido, oculta los demás,
+         * actualiza el estado activo en el sidebar y carga su script JS si es necesario.
+         * @param {string} moduleName - El nombre del módulo a activar (ej. 'dashboard').
+         */
+        async function activateModule(moduleName) {
+            // 1. Ocultar todos los contenedores de módulos.
+            document.querySelectorAll('.module-content').forEach(div => {
+                div.style.display = 'none';
+            });
+
+            // 2. Quitar la clase 'active' de todos los enlaces de navegación.
+            document.querySelectorAll('.sidebar-link, .footer-link').forEach(link => {
+                link.classList.remove('active');
+            });
+
+            // 3. Mostrar el contenedor del módulo seleccionado.
+            const targetModuleDiv = document.getElementById('module-' + moduleName);
+            if (targetModuleDiv) {
+                targetModuleDiv.style.display = 'block';
+            }
+
+            // 4. Añadir la clase 'active' al enlace de navegación correspondiente.
+            const activeLink = document.querySelector(`[data-module="${moduleName}"]`);
+            if (activeLink) {
+                activeLink.classList.add('active');
+            }
+
+            // 5. Carga e inicialización perezosa (lazy loading) de los scripts de cada módulo.
+            //    Esto mejora el rendimiento inicial de la página.
+            try {
+                if (moduleName === 'client-search') {
+                    await loadModuleScript('modules/client_search_module.js', 'client-search-module-script');
+                    const container = document.getElementById('client-search-app-container');
+                    // Inicializa el módulo solo la primera vez que se carga.
+                    if (container && !container.dataset.initialized) {
+                        if (window.initClientSearchModule) {
+                             await window.initClientSearchModule();
+                             container.dataset.initialized = 'true';
+                        }
+                    }
+                } else if (moduleName === 'chatbot') {
+                    await loadModuleScript('modules/chatbot_module.js', 'chatbot-module-script');
+                    const container = document.getElementById('chatbot-app-container');
+                    if (container && !container.dataset.initialized) {
+                         if (window.initChatbotModule) {
+                             await window.initChatbotModule();
+                             container.dataset.initialized = 'true';
+                         }
+                    }
+                } else if (moduleName === 'report') {
+                    await loadModuleScript('modules/environment_report_module.js', 'environment-report-module-script');
+                    const container = document.getElementById('environment-report-app-container');
+                    if (container && !container.dataset.initialized) {
+                        if (window.initEnvironmentReportModule) {
+                            await window.initEnvironmentReportModule();
+                            container.dataset.initialized = 'true';
+                        }
+                    }
+                } else if (moduleName === 'social') {
+                    await loadModuleScript('modules/social_media_module.js', 'social-media-module-script');
+                    const container = document.getElementById('social-media-form');
+                    if (container && !container.dataset.initialized) {
+                        if (window.initSocialMediaModule) {
+                             await window.initSocialMediaModule();
+                             container.dataset.initialized = 'true';
+                        }
+                    }
+                } else if (moduleName === 'strategic-analysis') {
+                    await loadModuleScript('modules/strategic_analysis_module.js', 'strategic-analysis-module-script');
+                    const container = document.getElementById('strategic-analysis-form');
+                    if (container && !container.dataset.initialized) {
+                        if (window.initStrategicAnalysisModule) {
+                             await window.initStrategicAnalysisModule();
+                             container.dataset.initialized = 'true';
+                        }
+                    }
+                } 
+            } catch (error) {
+                console.error(`ERROR JS: Error al activar el módulo ${moduleName}:`, error);
+            }
+        }
+
+        // --- Punto de Entrada Principal: se ejecuta cuando el DOM está completamente cargado ---
+        document.addEventListener('DOMContentLoaded', function () {
+
+            /**
+             * Configura la funcionalidad específica del Dashboard.
+             */
+            const setupDashboard = () => {
+                // Event listeners para los botones de acceso rápido del dashboard.
+                document.querySelectorAll('.dashboard-cta-button').forEach(button => {
+                    button.addEventListener('click', (e) => {
+                        const targetModule = e.currentTarget.dataset.targetModule;
+                        if (targetModule) {
+                            activateModule(targetModule);
+                        }
+                    });
+                });
+
+                // Función para obtener y mostrar las estadísticas de la BBDD de anuncios.
+                const updateTotalAds = async () => {
+                    const totalAdsSpan = document.getElementById('db-total-ads');
+                    const lastUpdateSpan = document.getElementById('db-last-update');
+                    if (!totalAdsSpan || !lastUpdateSpan) return;
+
+                    try {
+                        const response = await fetch('api/get_anuncios_csv.php');
+                        const result = await response.json();
+                        if (result.success) {
+                            totalAdsSpan.textContent = result.data.length.toLocaleString('es-ES');
+                            if (result.lastModified) {
+                                const date = new Date(result.lastModified);
+                                lastUpdateSpan.textContent = date.toLocaleDateString('es-ES');
+                            } else {
+                                lastUpdateSpan.textContent = "No disponible";
+                            }
+                        } else {
+                            totalAdsSpan.textContent = "Error";
+                            lastUpdateSpan.textContent = "Error";
+                        }
+                    } catch (error) {
+                        console.error("Error al cargar datos para el dashboard:", error);
+                        totalAdsSpan.textContent = "Error";
+                        lastUpdateSpan.textContent = "Error";
+                    }
+                };
+                
+                // Actualiza las estadísticas la primera vez que el dashboard se muestra.
+                if (document.getElementById('module-dashboard').style.display === 'block') {
+                    updateTotalAds();
+                }
+
+                // MutationObserver para volver a cargar las estadísticas cada vez que el dashboard
+                // se hace visible, asegurando que los datos estén actualizados.
+                const observer = new MutationObserver((mutations) => {
+                    for (let mutation of mutations) {
+                        if (mutation.attributeName === 'style' && document.getElementById('module-dashboard').style.display === 'block') {
+                            updateTotalAds();
+                        }
+                    }
+                });
+                observer.observe(document.getElementById('module-dashboard'), { attributes: true });
+            };
+
+            // Ejecuta la configuración del dashboard.
+            setupDashboard();
+
+            // Configuración de la navegación principal.
+            const sidebarLinks = document.querySelectorAll('.sidebar-link');
+            const footerLinks = document.querySelectorAll('.footer-link');
+
+            [...sidebarLinks, ...footerLinks].forEach(link => {
+                link.addEventListener('click', function (event) {
+                    event.preventDefault();
+                    const moduleId = this.dataset.module;
+                    activateModule(moduleId);
+                });
+            });
+            
+            // Carga el módulo inicial (dashboard) al cargar la página.
+            activateModule('dashboard');
+
+
+            // --- Lógica para el Formulario de Contacto ---
+            const contactForm = document.getElementById('contact-form');
+            if (contactForm) {
+                contactForm.addEventListener('submit', async function(event) {
+                    event.preventDefault();
+                    document.getElementById('contact-success').style.display = 'none';
+                    document.getElementById('contact-error').style.display = 'none';
+                    
+                    try {
+                        const response = await fetch('api/send_email.php', {
+                            method: 'POST',
+                            body: new FormData(contactForm)
+                        });
+                        const result = await response.json();
+
+                        if (result.success) {
+                            document.getElementById('contact-success').style.display = 'block';
+                            contactForm.reset();
+                        } else {
+                            const errorEl = document.getElementById('contact-error');
+                            errorEl.textContent = result.message || 'Hubo un error.';
+                            errorEl.style.display = 'block';
+                        }
+                    } catch (error) {
+                        const errorEl = document.getElementById('contact-error');
+                        errorEl.textContent = 'Error de conexión.';
+                        errorEl.style.display = 'block';
+                    }
+                });
+            }
+
+            // --- Lógica para el Formulario de Valoración (DEMO) ---
+            // NOTA: Esta funcionalidad es una simulación para el portfolio.
+            const valuationForm = document.getElementById('valuation-form');
+            if (valuationForm) {
+                valuationForm.addEventListener('submit', function(event) {
+                    event.preventDefault();
+                    const valuationOutput = document.getElementById('valuation-output');
+                    const valuationStatus = document.getElementById('valuation-status');
+                    valuationStatus.textContent = 'Calculando valoración...';
+                    valuationOutput.innerHTML = `<div class="w-full bg-slate-200 rounded-full h-2.5"><div class="bg-indigo-600 h-2.5 rounded-full animate-pulse" style="width: 60%"></div></div>`;
+                    
+                    // Simula una llamada a una API con un retraso de 1.5 segundos.
+                    setTimeout(() => {
+                        valuationStatus.textContent = ''; // Limpia el estado de "cargando"
+                        const area = parseFloat(document.getElementById('val-area').value) || 80;
+                        const basePricePerSqm = 1500 + Math.random() * 1000;
+                        const estimatedValue = area * basePricePerSqm * (1 + (Math.random() - 0.5) * 0.2);
+                        const confidence = Math.random() * 0.1 * estimatedValue;
+                        
+                        // Muestra los resultados simulados.
+                        valuationOutput.innerHTML = `
+                            <div class="bg-slate-50 p-4 rounded-lg border border-slate-200">
+                                <h4 class="text-base font-semibold text-slate-900 mb-3">Resultado de la Valoración Estimada:</h4>
+                                <p class="text-sm text-slate-600"><strong>Valor Estimado:</strong> <span class="text-3xl font-bold text-indigo-600">${Math.round(estimatedValue).toLocaleString('es-ES')} €</span></p>
+                                <p class="text-sm text-slate-600 mt-1"><strong>Rango de Confianza (±):</strong> ${Math.round(confidence).toLocaleString('es-ES')} €</p>
+                                <p class="text-xs text-slate-500 italic mt-4">Esta es una estimación ilustrativa y no sustituye una tasación profesional.</p>
+                            </div>
+                            <div class="mt-6 pt-4 border-t border-slate-200 flex justify-end">
+                                <button type="button" class="inline-flex items-center gap-2 rounded-md bg-white px-3 py-2 text-sm font-semibold text-slate-900 shadow-sm ring-1 ring-inset ring-slate-300 hover:bg-slate-50">
+                                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke-width="2" stroke="currentColor" > <path stroke-linecap="round" stroke-linejoin="round" d="M9 8.25H7.5a2.25 2.25 0 0 0-2.25 2.25v9a2.25 2.25 0 0 0 2.25 2.25h9a2.25 2.25 0 0 0 2.25-2.25v-9a2.25 2.25 0 0 0-2.25-2.25H15m0-3-3-3m0 0-3 3m3-3v11.25" /> </svg>
+                                    Exportar Informe
+                                </button>
+                            </div>`;
+                    }, 1500);
+                });
+            }
+        });
+    </script>
+</body>
+</html>

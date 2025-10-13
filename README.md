@@ -127,6 +127,6 @@ Este proyecto se distribuye bajo la Licencia MIT. Consulta el archivo `LICENSE` 
 
 ### 👤 Contacto
 
-Guillermo Mulas  
 guillemuba13@gmail.com 
+
 [[LinkedIn](https://www.linkedin.com/in/guillermo-mulas-batista-0185a52ab)] 
